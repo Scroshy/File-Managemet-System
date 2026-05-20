@@ -1,6 +1,10 @@
 from pathlib import Path
 from typing import Union
 
+from app_io import debug, get_logger
+
+logger = get_logger("folder_compare")
+
 
 def _relative_file_paths(folder: Path, *, recursive: bool) -> set[str]:
     """Collect file paths relative to folder (root folder name is not included)."""
@@ -54,15 +58,32 @@ def compare_folder_filenames_report(
     """
     folder_a = Path(folder_a).resolve()
     folder_b = Path(folder_b).resolve()
+    logger.info(
+        "compare_folder_filenames_report: %s vs %s (recursive=%s)",
+        folder_a,
+        folder_b,
+        recursive,
+    )
 
     if not folder_a.is_dir():
+        logger.error("'%s' is not a directory.", folder_a)
         raise NotADirectoryError(f"'{folder_a}' is not a directory.")
     if not folder_b.is_dir():
+        logger.error("'%s' is not a directory.", folder_b)
         raise NotADirectoryError(f"'{folder_b}' is not a directory.")
 
     paths_a = _relative_file_paths(folder_a, recursive=recursive)
     paths_b = _relative_file_paths(folder_b, recursive=recursive)
+    debug(f"Folder A file count: {len(paths_a)}", logger=logger)
+    debug(f"Folder B file count: {len(paths_b)}", logger=logger)
 
     only_in_a = paths_a - paths_b
     only_in_b = paths_b - paths_a
-    return (not only_in_a and not only_in_b, only_in_a, only_in_b)
+    is_match = not only_in_a and not only_in_b
+    logger.info(
+        "Compare result: match=%s, only_in_a=%d, only_in_b=%d",
+        is_match,
+        len(only_in_a),
+        len(only_in_b),
+    )
+    return (is_match, only_in_a, only_in_b)

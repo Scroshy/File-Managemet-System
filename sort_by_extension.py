@@ -1,7 +1,10 @@
 from pathlib import Path
 from typing import Union
 
+from app_io import debug, error, get_logger, info, success, warning
 from basic import move_file, unique_destination
+
+logger = get_logger("sort_by_extension")
 
 
 def _extension_folder_name(file_path: Path) -> str:
@@ -27,32 +30,46 @@ def sort_by_extension(directory: Union[str, Path]) -> bool:
     """
     try:
         directory = Path(directory)
+        logger.info("sort_by_extension started: %s", directory)
 
         if not directory.exists():
-            print(f"Error: Directory '{directory}' does not exist.")
+            error(f"Directory '{directory}' does not exist.", logger=logger)
             return False
 
         if not directory.is_dir():
-            print(f"Error: '{directory}' is not a directory.")
+            error(f"'{directory}' is not a directory.", logger=logger)
             return False
 
         files = [path for path in directory.iterdir() if path.is_file()]
         if not files:
-            print(f"No files to sort in '{directory}'.")
+            info(f"No files to sort in '{directory}'.", logger=logger)
             return True
 
-        success = True
+        success_count = 0
+        operation_ok = True
         for file_path in files:
             ext_folder = directory / _extension_folder_name(file_path)
             ext_folder.mkdir(exist_ok=True)
             destination = unique_destination(ext_folder, file_path.name)
-            if not move_file(file_path, destination):
-                success = False
+            debug(f"Sorting '{file_path.name}' -> '{destination}'", logger=logger)
+            if move_file(file_path, destination):
+                success_count += 1
+            else:
+                operation_ok = False
 
-        if success:
-            print(f"Sorted {len(files)} file(s) by extension in '{directory}'.")
-        return success
+        if operation_ok:
+            success(
+                f"Sorted {success_count} file(s) by extension in '{directory}'.",
+                logger=logger,
+            )
+        else:
+            warning(
+                f"Sort completed with errors ({success_count}/{len(files)} files).",
+                logger=logger,
+            )
+        return operation_ok
 
-    except Exception as e:
-        print(f"Error sorting files by extension: {e}")
+    except Exception as exc:
+        error(f"Error sorting files by extension: {exc}", logger=logger)
+        logger.exception("sort_by_extension failed")
         return False

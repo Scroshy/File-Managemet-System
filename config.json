@@ -1,0 +1,36 @@
+{
+  "app": {
+    "name": "file-managemet-system",
+    "title": "File Management System"
+  },
+  "logging": {
+    "enabled": true,
+    "level": "DEBUG",
+    "logs_directory": "logs",
+    "log_filename": "session_{timestamp}.txt",
+    "file_format": "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+    "date_format": "%Y-%m-%d %H:%M:%S"
+  },
+  "rich": {
+    "enabled": true,
+    "styles": {
+      "title": "bold white on blue",
+      "panel_border": "bright_blue",
+      "table_header": "bold magenta",
+      "table_border": "dim",
+      "menu_key": "bold cyan",
+      "menu_label": "white",
+      "info": "dim",
+      "success": "bold green",
+      "warning": "bold yellow",
+      "error": "bold red",
+      "accent": "cyan",
+      "prompt": "bold cyan",
+      "bullet": "dim"
+    },
+    "panel_padding": [1, 4]
+  },
+  "features": {
+    "flatten_separator": "__FLAT__"
+  }
+}

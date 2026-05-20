@@ -1,10 +1,11 @@
 from pathlib import Path
 from typing import Union
 
+from app_io import debug, error, get_logger, info, success, warning
 from basic import copy_file, unique_destination
+from constants import FLATTEN_SEPARATOR
 
-# Encodes nested paths in a single filename; unlikely in real path components.
-FLATTEN_SEPARATOR = "__FLAT__"
+logger = get_logger("flattener")
 
 
 def _escape_part(part: str) -> str:
@@ -57,41 +58,49 @@ def flatten_folder(directory: Union[str, Path]) -> bool:
     """
     try:
         directory = Path(directory).resolve()
+        logger.info("flatten_folder started: %s", directory)
 
         if not directory.exists():
-            print(f"Error: Directory '{directory}' does not exist.")
+            error(f"Directory '{directory}' does not exist.", logger=logger)
             return False
 
         if not directory.is_dir():
-            print(f"Error: '{directory}' is not a directory.")
+            error(f"'{directory}' is not a directory.", logger=logger)
             return False
 
-        files = [
-            path
-            for path in directory.rglob("*")
-            if path.is_file()
-        ]
+        files = [path for path in directory.rglob("*") if path.is_file()]
         if not files:
-            print(f"No files to flatten in '{directory}'.")
+            info(f"No files to flatten in '{directory}'.", logger=logger)
             return True
 
         output_dir = _flattened_output_dir(directory)
         output_dir.mkdir(parents=True, exist_ok=True)
+        logger.debug("Flatten output directory: %s", output_dir)
 
-        success = True
+        success_count = 0
+        operation_ok = True
         for file_path in files:
             flat_name = _flattened_filename(directory, file_path)
             destination = unique_destination(output_dir, flat_name)
-            if not copy_file(file_path, destination):
-                success = False
+            debug(f"Flattening '{file_path}' as '{destination.name}'", logger=logger)
+            if copy_file(file_path, destination):
+                success_count += 1
+            else:
+                operation_ok = False
 
-        if success:
-            print(
-                f"Flattened {len(files)} file(s) from '{directory}' "
-                f"into '{output_dir}'."
+        if operation_ok:
+            success(
+                f"Flattened {success_count} file(s) from '{directory}' into '{output_dir}'.",
+                logger=logger,
             )
-        return success
+        else:
+            warning(
+                f"Flatten completed with errors ({success_count}/{len(files)} files).",
+                logger=logger,
+            )
+        return operation_ok
 
-    except Exception as e:
-        print(f"Error flattening folder: {e}")
+    except Exception as exc:
+        error(f"Error flattening folder: {exc}", logger=logger)
+        logger.exception("flatten_folder failed")
         return False

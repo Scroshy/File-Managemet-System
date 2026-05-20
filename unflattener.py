@@ -1,8 +1,11 @@
 from pathlib import Path
 from typing import Union
 
+from app_io import debug, error, get_logger, info, success, warning
 from basic import copy_file, unique_destination
-from flattener import FLATTEN_SEPARATOR
+from constants import FLATTEN_SEPARATOR
+
+logger = get_logger("unflattener")
 
 
 def _unescape_part(part: str) -> str:
@@ -63,13 +66,14 @@ def unflatten_folder(
     """
     try:
         flattened_directory = Path(flattened_directory).resolve()
+        logger.info("unflatten_folder started: %s", flattened_directory)
 
         if not flattened_directory.exists():
-            print(f"Error: Directory '{flattened_directory}' does not exist.")
+            error(f"Directory '{flattened_directory}' does not exist.", logger=logger)
             return False
 
         if not flattened_directory.is_dir():
-            print(f"Error: '{flattened_directory}' is not a directory.")
+            error(f"'{flattened_directory}' is not a directory.", logger=logger)
             return False
 
         if output_root is None:
@@ -77,43 +81,51 @@ def unflatten_folder(
         else:
             output_root = Path(output_root).resolve()
 
+        logger.debug("Unflatten output root: %s", output_root)
+
         files = [path for path in flattened_directory.iterdir() if path.is_file()]
         if not files:
-            print(f"No files to unflatten in '{flattened_directory}'.")
+            info(f"No files to unflatten in '{flattened_directory}'.", logger=logger)
             return True
 
-        success = True
+        operation_ok = True
         restored = 0
         skipped = 0
 
         for file_path in files:
             relative_path = parse_flat_filename(file_path.name)
             if relative_path is None:
-                print(f"Skipping (not a flattened name): '{file_path.name}'")
+                warning(
+                    f"Skipping (not a flattened name): '{file_path.name}'",
+                    logger=logger,
+                )
                 skipped += 1
                 continue
 
             destination = output_root / relative_path
             destination.parent.mkdir(parents=True, exist_ok=True)
             final_path = unique_destination(destination.parent, destination.name)
+            debug(f"Restoring '{file_path.name}' -> '{final_path}'", logger=logger)
 
-            if not copy_file(file_path, final_path):
-                success = False
-            else:
+            if copy_file(file_path, final_path):
                 restored += 1
+            else:
+                operation_ok = False
 
-        if success and restored:
-            print(
+        if operation_ok and restored:
+            success(
                 f"Restored {restored} file(s) from '{flattened_directory}' "
-                f"under '{output_root}'."
+                f"under '{output_root}'.",
+                logger=logger,
             )
-        elif success and skipped and not restored:
-            print("No flattened files found to restore.")
+        elif operation_ok and skipped and not restored:
+            info("No flattened files found to restore.", logger=logger)
         elif skipped:
-            print(f"Skipped {skipped} file(s) with unrecognized names.")
+            warning(f"Skipped {skipped} file(s) with unrecognized names.", logger=logger)
 
-        return success
+        return operation_ok
 
-    except Exception as e:
-        print(f"Error unflattening folder: {e}")
+    except Exception as exc:
+        error(f"Error unflattening folder: {exc}", logger=logger)
+        logger.exception("unflatten_folder failed")
         return False
