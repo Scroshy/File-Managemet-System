@@ -4,6 +4,8 @@ from typing import Union
 
 from app_io import debug, error, get_logger, success
 
+from constants import DELETE_FALLBACK_FOLDER
+
 logger = get_logger("basic")
 
 try:
@@ -201,7 +203,7 @@ def delete_to_recycle_bin(path: Union[str, Path]) -> bool:
             send2trash(str(path))
             success(f"Item sent to recycle bin: '{path}'", logger=logger)
         else:
-            deleted_folder = Path.cwd() / "Deleted"
+            deleted_folder = Path.cwd() / DELETE_FALLBACK_FOLDER
             deleted_folder.mkdir(exist_ok=True)
             destination = deleted_folder / path.name
             shutil.move(str(path), str(destination))

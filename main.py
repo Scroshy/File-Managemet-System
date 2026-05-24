@@ -37,19 +37,8 @@ from unflattener import unflatten_folder
 logger = get_logger("main")
 console = get_console()
 
-MENU_ITEMS: list[tuple[str, str]] = [
-    ("1", "Copy file"),
-    ("2", "Copy folder"),
-    ("3", "Move file"),
-    ("4", "Move folder"),
-    ("5", "Rename file"),
-    ("6", "Rename folder"),
-    ("7", "Delete to recycle bin"),
-    ("8", "Sort files by extension"),
-    ("9", "Flatten folder (nested → flat)"),
-    ("10", "Unflatten folder (flat → nested)"),
-    ("11", "Compare two folders (filenames)"),
-]
+def menu_items() -> list[tuple[str, str]]:
+    return [(item["key"], item["label"]) for item in get_config()["app"]["menu"]]
 
 
 def _tk_root() -> tk.Tk:
@@ -147,7 +136,7 @@ def _print_dashboard() -> None:
     )
     table.add_column("#", style=style("menu_key"), justify="right", width=4)
     table.add_column("Feature", style=style("menu_label"))
-    for key, label in MENU_ITEMS:
+    for key, label in menu_items():
         table.add_row(key, label)
     console.print(table)
     console.print(
@@ -361,7 +350,7 @@ def _dispatch(choice: str) -> bool:
         case "11":
             _handle_compare_folders()
         case _:
-            valid = ", ".join(key for key, _ in MENU_ITEMS)
+            valid = ", ".join(key for key, _ in menu_items())
             error(f"Invalid choice '{choice}'. Pick one of: {valid}, or Q to quit.", logger=logger)
     return True
 

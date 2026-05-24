@@ -3,6 +3,7 @@ from typing import Union
 
 from app_io import debug, error, get_logger, info, success, warning
 from basic import move_file, unique_destination
+from constants import NO_EXTENSION_FOLDER
 
 logger = get_logger("sort_by_extension")
 
@@ -12,7 +13,7 @@ def _extension_folder_name(file_path: Path) -> str:
     suffix = file_path.suffix.lower()
     if suffix:
         return suffix.lstrip(".")
-    return "no_extension"
+    return NO_EXTENSION_FOLDER
 
 
 def sort_by_extension(directory: Union[str, Path]) -> bool:

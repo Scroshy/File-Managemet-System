@@ -14,7 +14,9 @@ _config: dict | None = None
 _console: Console | None = None
 _setup_done = False
 
-ROOT_LOGGER_NAME = "fms"
+
+def root_logger_name() -> str:
+    return get_config()["logging"]["root_logger_name"]
 
 
 def load_config() -> dict:
@@ -76,7 +78,7 @@ def setup() -> Path | None:
             )
         )
 
-        root = logging.getLogger(ROOT_LOGGER_NAME)
+        root = logging.getLogger(root_logger_name())
         root.setLevel(getattr(logging, log_cfg["level"].upper(), logging.DEBUG))
         root.handlers.clear()
         root.addHandler(file_handler)
@@ -104,9 +106,10 @@ def _log_file_path() -> Path | None:
 def get_logger(name: str) -> logging.Logger:
     """Return a child logger under the app root logger."""
     setup()
-    if name.startswith(f"{ROOT_LOGGER_NAME}."):
+    root = root_logger_name()
+    if name.startswith(f"{root}."):
         return logging.getLogger(name)
-    return logging.getLogger(f"{ROOT_LOGGER_NAME}.{name}")
+    return logging.getLogger(f"{root}.{name}")
 
 
 def _emit(level: int, message: str, style_key: str, logger: logging.Logger) -> None:
@@ -134,4 +137,4 @@ def error(message: str, *, logger: logging.Logger | None = None) -> None:
 
 
 def debug(message: str, *, logger: logging.Logger | None = None) -> None:
-    _emit(logging.DEBUG, message, "info", logger or get_logger("app"))
+    _emit(logging.DEBUG, message, "debug", logger or get_logger("app"))

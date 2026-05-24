@@ -1,11 +1,25 @@
 {
   "app": {
     "name": "file-managemet-system",
-    "title": "File Management System"
+    "title": "File Management System",
+    "menu": [
+      {"key": "1", "label": "Copy file"},
+      {"key": "2", "label": "Copy folder"},
+      {"key": "3", "label": "Move file"},
+      {"key": "4", "label": "Move folder"},
+      {"key": "5", "label": "Rename file"},
+      {"key": "6", "label": "Rename folder"},
+      {"key": "7", "label": "Delete to recycle bin"},
+      {"key": "8", "label": "Sort files by extension"},
+      {"key": "9", "label": "Flatten folder (nested → flat)"},
+      {"key": "10", "label": "Unflatten folder (flat → nested)"},
+      {"key": "11", "label": "Compare two folders (filenames)"}
+    ]
   },
   "logging": {
     "enabled": true,
     "level": "DEBUG",
+    "root_logger_name": "fms",
     "logs_directory": "logs",
     "log_filename": "session_{timestamp}.txt",
     "file_format": "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
@@ -26,11 +40,15 @@
       "error": "bold red",
       "accent": "cyan",
       "prompt": "bold cyan",
-      "bullet": "dim"
+      "bullet": "dim",
+      "debug": "dim italic"
     },
     "panel_padding": [1, 4]
   },
   "features": {
-    "flatten_separator": "__FLAT__"
+    "flatten_separator": "__FLAT__",
+    "flatten_output_suffix": "_flattened",
+    "delete_fallback_folder": "Deleted",
+    "no_extension_folder": "no_extension"
   }
 }

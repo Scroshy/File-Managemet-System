@@ -3,7 +3,7 @@ from typing import Union
 
 from app_io import debug, error, get_logger, info, success, warning
 from basic import copy_file, unique_destination
-from constants import FLATTEN_SEPARATOR
+from constants import FLATTEN_OUTPUT_SUFFIX, FLATTEN_SEPARATOR
 
 logger = get_logger("flattener")
 
@@ -16,13 +16,14 @@ def _escape_part(part: str) -> str:
 
 def _flattened_output_dir(source: Path) -> Path:
     """Return a sibling folder name like my_files_flattened or my_files_flattened_1."""
-    candidate = source.parent / f"{source.name}_flattened"
+    suffix = FLATTEN_OUTPUT_SUFFIX
+    candidate = source.parent / f"{source.name}{suffix}"
     if not candidate.exists():
         return candidate
 
     counter = 1
     while True:
-        candidate = source.parent / f"{source.name}_flattened_{counter}"
+        candidate = source.parent / f"{source.name}{suffix}_{counter}"
         if not candidate.exists():
             return candidate
         counter += 1
@@ -43,7 +44,7 @@ def _flattened_filename(source_root: Path, file_path: Path) -> str:
 def flatten_folder(directory: Union[str, Path]) -> bool:
     """
     Recursively collect all files under directory and copy them into a single
-    sibling folder named {folder_name}_flattened (with a numeric suffix if needed).
+    sibling folder named {folder_name}<flatten_output_suffix> (with a numeric suffix if needed).
 
     Original files and folder structure are left unchanged.
 
